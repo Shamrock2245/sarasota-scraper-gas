@@ -1,0 +1,93 @@
+name: Sarasota County Scraper
+
+on:
+  # Run daily at 6 AM UTC (2 AM ET / 1 AM EDT)
+  schedule:
+    - cron: '0 6 * * *'
+  
+  # Allow manual trigger with optional date input
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date to scrape (YYYY-MM-DD) - leave empty for yesterday'
+        required: false
+        type: string
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Cache Playwright browsers
+      uses: actions/cache@v3
+      id: playwright-cache
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('requirements.txt') }}
+    
+    - name: Install Playwright browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: |
+        python -m playwright install chromium
+        python -m playwright install-deps chromium
+    
+    - name: Ensure Playwright browsers are available
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: |
+        python -m playwright install-deps chromium
+    
+    - name: Create credentials file from secret
+      env:
+        GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      run: |
+        echo "$GOOGLE_CREDENTIALS" > credentials.json
+    
+    - name: Determine date to scrape
+      id: date
+      run: |
+        if [ -n "${{ github.event.inputs.date }}" ]; then
+          echo "date=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
+        else
+          echo "date=$(date -d 'yesterday' +%Y-%m-%d)" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Run scraper
+      run: |
+        echo "Scraping arrests for date: ${{ steps.date.outputs.date }}"
+        python sarasota_scraper.py --date "${{ steps.date.outputs.date }}"
+    
+    - name: Upload results as artifact (on failure)
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: scraper-logs
+        path: |
+          *.log
+          *.json
+        retention-days: 7
+    
+    - name: Clean up credentials
+      if: always()
+      run: |
+        rm -f credentials.json
