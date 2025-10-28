@@ -1,6 +1,12 @@
 # Credentials
 credentials.json
-*.json
+.env
+
+# Allow template and package files
+!credentials.json.template
+!package.json
+!package-lock.json
+!tsconfig.json
 
 # Python
 __pycache__/
@@ -33,7 +39,10 @@ env.bak/
 venv.bak/
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo

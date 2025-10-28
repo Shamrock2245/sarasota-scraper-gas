@@ -1,0 +1,40 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Scrape Today",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/sarasota_scraper.py",
+      "args": [
+        "--date",
+        "2025-10-28",
+        "--no-upload"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Scrape Today (Headful)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/sarasota_scraper.py",
+      "args": [
+        "--date",
+        "2025-10-28",
+        "--headful",
+        "--no-upload"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Test Setup",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/test_setup.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
