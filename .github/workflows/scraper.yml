@@ -77,16 +77,6 @@ jobs:
         echo "Scraping arrests for date: ${{ steps.date.outputs.date }}"
         python sarasota_scraper.py --date "${{ steps.date.outputs.date }}"
     
-    - name: Upload results as artifact (on failure)
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: scraper-logs
-        path: |
-          *.log
-          *.json
-        retention-days: 7
-    
     - name: Clean up credentials
       if: always()
       run: |
