@@ -266,7 +266,7 @@ def maybe_pick_quick_link(page):
 
 @retry(
     reraise=True,
-    stop=stop_after_attempt(3),
+    stop=stop_after_attempt(2),
     wait=wait_exponential(multiplier=1, min=1, max=6),
     retry=retry_if_exception_type(PWTimeoutError),
 )
@@ -282,9 +282,13 @@ def scrape_for_date(date_str: str, headless: bool = True) -> List[Dict]:
         context = browser.new_context()
         page = context.new_page()
         
-        # Navigate to entry page
-        page.goto(ENTRY_URL, wait_until="domcontentloaded", timeout=30000)
-        page.wait_for_load_state("networkidle", timeout=30000)
+        # Navigate to entry page with longer timeout
+        page.goto(ENTRY_URL, wait_until="domcontentloaded", timeout=60000)
+        try:
+            page.wait_for_load_state("networkidle", timeout=45000)
+        except:
+            # If networkidle times out, just wait a bit and continue
+            page.wait_for_timeout(3000)
         maybe_pick_quick_link(page)
         
         # Capture JSON responses
